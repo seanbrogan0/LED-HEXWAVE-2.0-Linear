@@ -1,11 +1,8 @@
-// File: src/hex_mapping.cpp
+// hexcore/hex_geometry.cpp
+// (Index lists preserved exactly from the original sketch —
+//  the non-sequential runs correct for each panel's wiring.)
 
-#include "hex_mapping.h"
-
-// =========================================================
-// HEX LED INDEX LISTS
-// =========================================================
-
+#include "hex_geometry.h"
 
 const uint16_t HEX1[] = {0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23};
 const uint16_t HEX2[] = {24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47};
@@ -17,14 +14,9 @@ const uint16_t HEX7[] = {156,157,158,159,160,161,162,163,164,165,166,167,144,145
 const uint16_t HEX8[] = {172,173,174,175,176,177,178,179,180,181,182,183,184,185,186,187,188,189,190,191,168,169,170,171};
 const uint16_t HEX9[] = {192,193,194,195,196,197,198,199,200,201,202,203,204,205,206,207,208,209,210,211,212,213,214,215};
 
-// =========================================================
-// HEX SIZE (ALL HEXES ARE SAME SIZE IN YOUR SKETCH)
-// =========================================================
-const uint16_t HEX_SIZE = 24;  
-
-// =========================================================
-// MASTER ARRAY OF HEX POINTERS
-// =========================================================
-const uint16_t* HEXES[9] = {
+const uint16_t* const HEXES[NUM_HEXES] = {
     HEX1, HEX2, HEX3, HEX4, HEX5, HEX6, HEX7, HEX8, HEX9
 };
+
+const int HEX_PATH_COMETS[] = {1, 2, 3, 2, 4, 5, 6, 7, 8, 9};
+const int HEX_PATH_PERIM[]  = {1, 2, 3, 4, 5, 6, 7, 8, 9};

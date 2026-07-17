@@ -3,7 +3,7 @@
 #include "modes/non_audio/mode_solid.h"
 #include "input.h"
 #include "utils.h"
-#include "hex_mapping.h"
+#include "hex_geometry.h"
 #include "hardware.h"
 #include <Arduino.h>
 

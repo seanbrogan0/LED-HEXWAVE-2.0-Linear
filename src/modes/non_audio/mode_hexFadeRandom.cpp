@@ -4,7 +4,7 @@
 #include "input.h"
 #include "utils.h"
 #include "palette.h"
-#include "hex_mapping.h"
+#include "hex_geometry.h"
 #include "hardware.h"
 #include <Arduino.h>
 
@@ -13,10 +13,11 @@
 // Picks ONE hex, fades from its current colour to a new
 // random palette colour. Other hexes keep their colours.
 // Left pot = fade speed. Right pot = brightness.
+// (Colour blending uses hexcore's lerpColour32.)
 // =========================================================
 
 // Per-hex current colours
-static uint32_t hexColours[9];
+static uint32_t hexColours[NUM_HEXES];
 
 // Active fade state
 static int currentHex = -1;
@@ -26,37 +27,15 @@ static float blend = 0.0f;
 static bool firstRun = true;
 
 // =========================================================
-// COLOUR LERP (start → target, t = 0..1)
-// =========================================================
-static uint32_t lerpColour(uint32_t a, uint32_t b, float t) {
-    if (t < 0.0f) t = 0.0f;
-    if (t > 1.0f) t = 1.0f;
-
-    uint8_t ar = (a >> 16) & 0xFF;
-    uint8_t ag = (a >> 8)  & 0xFF;
-    uint8_t ab =  a        & 0xFF;
-
-    uint8_t br = (b >> 16) & 0xFF;
-    uint8_t bg = (b >> 8)  & 0xFF;
-    uint8_t bb =  b        & 0xFF;
-
-    uint8_t r = ar + (int)((br - ar) * t);
-    uint8_t g = ag + (int)((bg - ag) * t);
-    uint8_t bch = ab + (int)((bb - ab) * t);
-
-    return strip.Color(r, g, bch);
-}
-
-// =========================================================
 // SELECT NEXT HEX (PRIORITISE BLACK HEXES)
 // =========================================================
 static int pickNextHex() {
     // First collect all black hexes
-    int blackList[9];
+    int blackList[NUM_HEXES];
     int blackCount = 0;
 
-    for (int i = 0; i < 9; i++) {
-        if (hexColours[i] == strip.Color(0, 0, 0)) {
+    for (int i = 0; i < NUM_HEXES; i++) {
+        if (hexColours[i] == 0) {
             blackList[blackCount++] = i;
         }
     }
@@ -67,7 +46,7 @@ static int pickNextHex() {
     }
 
     // Otherwise choose any hex
-    return random(0, 9);
+    return random(0, NUM_HEXES);
 }
 
 // =========================================================
@@ -79,8 +58,8 @@ void mode_hexFadeRandom() {
     // INITIALISE PER-HEX COLOURS ON FIRST RUN
     // ---------------------------------------------------------
     if (firstRun) {
-        for (int i = 0; i < 9; i++) {
-            hexColours[i] = strip.Color(0, 0, 0);  // start from black
+        for (int i = 0; i < NUM_HEXES; i++) {
+            hexColours[i] = 0;  // start from black
         }
         currentHex = pickNextHex();
         startColor = hexColours[currentHex];
@@ -102,8 +81,7 @@ void mode_hexFadeRandom() {
     if (blend > 1.0f) blend = 1.0f;
 
     // Update the active hex colour
-    uint32_t newColour = lerpColour(startColor, targetColor, blend);
-    hexColours[currentHex] = newColour;
+    hexColours[currentHex] = lerpColour32(startColor, targetColor, blend);
 
     // ---------------------------------------------------------
     // WHEN FADE COMPLETES → PICK NEW HEX + NEW TARGET COLOUR
@@ -124,7 +102,7 @@ void mode_hexFadeRandom() {
     // ---------------------------------------------------------
     // DRAW ALL HEXES FROM THEIR STORED COLOURS
     // ---------------------------------------------------------
-    for (int h = 0; h < 9; h++) {
+    for (int h = 0; h < NUM_HEXES; h++) {
         fillHex(h, hexColours[h]);
     }
 }

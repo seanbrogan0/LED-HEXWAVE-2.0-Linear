@@ -4,7 +4,7 @@
 #include "audio_engine.h"
 #include "utils.h"
 #include "palette.h"
-#include "hex_mapping.h"
+#include "hex_geometry.h"
 
 // =========================================================
 // MODE 0 — SIMPLE AUDIO HEX
