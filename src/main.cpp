@@ -19,6 +19,9 @@
 #include "audio_engine.h"
 #include "mode_registry.h"
 
+// The on-hardware test harness supplies its own setup()/loop()
+#ifndef PIO_UNIT_TESTING
+
 // =========================================================
 // SETUP
 // =========================================================
@@ -70,3 +73,5 @@ void loop() {
 
     strip.show();
 }
+
+#endif  // PIO_UNIT_TESTING
