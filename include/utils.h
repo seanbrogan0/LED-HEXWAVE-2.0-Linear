@@ -32,6 +32,3 @@ void rotateHex(int hexIndex, int amount);
 
 // Multiply a hex's pixels by factor (0.0–1.0)
 void fadeHex(int hexIndex, float factor);
-
-// Send colours to strip (global brightness applied)
-void SendColours();

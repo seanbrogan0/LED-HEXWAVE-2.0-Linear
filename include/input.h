@@ -1,42 +1,50 @@
 // File: include/input.h
+// =========================================================
+// ModeEngine — buttons, pots, and persisted mode state.
+// - Left button : short = cycle active group, long = reset both
+// - Right button: toggle audio/non-audio (+ indicator LED)
+// - Pots smoothed (IIR) and normalized to 0.0–1.0
+// - State persisted to EEPROM and validated against the
+//   mode registry on load (pure logic in hexcore/mode_state)
+// =========================================================
 
 #pragma once
 #include <Arduino.h>
+#include "mode_state.h"
 
-// =========================================================
-// BUTTON + POT GLOBALS
-// =========================================================
+#define LONG_PRESS_TIME_MS  600
+#define BTN_DEBOUNCE_MS     180
+#define POT_SMOOTH_ALPHA    0.1f
 
-// Raw pot values (0–4095 on ESP32 ADC)
-extern int leftPotValue;
-extern int rightPotValue;
+class ModeEngine {
+public:
+    void begin();
+    void update();
 
-// Button states
-extern bool leftBtnPressed;
-extern bool rightBtnPressed;
+    bool audioModeEnabled() const { return state.audioEnabled; }
+    int currentAudioMode() const { return state.audioMode; }
+    int currentNonAudioMode() const { return state.nonAudioMode; }
 
-// Debounce timing
-extern unsigned long lastLeftBtnTime;
-extern unsigned long lastRightBtnTime;
-extern const unsigned long debounceDelay;
+    float leftPot()  const { return potLeft; }
+    float rightPot() const { return potRight; }
 
-// =========================================================
-// MODE STATE
-// =========================================================
+private:
+    ModeState state = { false, 0, 0 };
 
-// Audio / non‑audio mode flag
-extern bool audioModeEnabled;
+    bool leftPressed = false;
+    bool rightPressed = false;
 
-// Current mode indices
-extern int currentAudioMode;
-extern int currentNonAudioMode;
+    unsigned long leftPressStart = 0;
+    unsigned long rightPressStart = 0;
+    unsigned long lastBtnTime = 0;
 
-// EEPROM persistence
-void saveModeState();
-void loadModeState();
+    float potLeft = 0;
+    float potRight = 0;
 
-// =========================================================
-// INPUT PROCESSING
-// =========================================================
-void ReadPots();
-void ReadButtons();
+    void loadState();
+    void saveState();
+    void updateIndicator();
+    bool readButton(int pin);
+};
+
+extern ModeEngine modeEngine;

@@ -39,9 +39,9 @@ void mode_perimeterPathBounce() {
     }
 
     // ---------------------------------------------------------
-    // LEFT POT = SPEED CONTROL
+    // LEFT POT = SPEED (same 400 → 50 ms curve as the raw-pot map)
     // ---------------------------------------------------------
-    int speed = map(leftPotValue, 0, 4095, 400, 50);
+    int speed = (int)(400.0f - modeEngine.leftPot() * 350.0f);
     static unsigned long lastMove = 0;
 
     if (millis() - lastMove >= (unsigned long)speed) {

@@ -9,15 +9,12 @@
 // =========================================================
 // MODE 0 — SIMPLE AUDIO HEX
 // Bass → Hex 1–3, Mid → Hex 4–6, Treb → Hex 7–9
-// Matches original sketch mapping and scaling.
+// Band values come from the loop's audioUpdate() each frame.
 // =========================================================
 void mode_simpleAudioHex() {
-    double bass, mid, treb;
-    computeAudioBands(bass, mid, treb);
-
-    float b = bass / BASS_MAX;
-    float m = mid  / MID_MAX;
-    float t = treb / TREB_MAX;
+    float b = audioBassNorm();
+    float m = audioMidNorm();
+    float t = audioTrebNorm();
 
     // Bass hexes
     fillHex(0, dimColour(COL_RED, b));

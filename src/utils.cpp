@@ -58,11 +58,3 @@ void fadeHex(int hexIndex, float factor) {
         strip.setPixelColor(hex[i], dimColour32(strip.getPixelColor(hex[i]), factor));
     }
 }
-
-// =========================================================
-// SEND COLOURS (APPLY GLOBAL BRIGHTNESS)
-// =========================================================
-void SendColours() {
-    strip.setBrightness(globalMaxBright);
-    strip.show();
-}

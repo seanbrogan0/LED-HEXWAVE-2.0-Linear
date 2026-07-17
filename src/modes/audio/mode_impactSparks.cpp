@@ -16,10 +16,8 @@ static float impactEnergy = 0.0f;
 static unsigned long lastSparkTime = 0;
 
 void mode_impactSparks() {
-    double bass, mid, treb;
-    computeAudioBands(bass, mid, treb);
-
-    float energy = (bass + mid + treb) / (BASS_MAX + MID_MAX + TREB_MAX);
+    float energy = (audioBassRaw() + audioMidRaw() + audioTrebRaw())
+                 / (BASS_MAX + MID_MAX + TREB_MAX);
 
     // Exponential smoothing of energy (matches original “laggy” feel)
     impactEnergy = impactEnergy * 0.90f + energy * 0.10f;

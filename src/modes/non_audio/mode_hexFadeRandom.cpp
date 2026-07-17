@@ -69,9 +69,9 @@ void mode_hexFadeRandom() {
     }
 
     // ---------------------------------------------------------
-    // LEFT POT = FADE SPEED (slow → fast)
+    // LEFT POT = FADE SPEED (same 1 → 20 curve as the raw-pot map)
     // ---------------------------------------------------------
-    float fadeSpeed = map(leftPotValue, 0, 4095, 1, 20) / 500.0f;
+    float fadeSpeed = (1.0f + modeEngine.leftPot() * 19.0f) / 500.0f;
 
     // ---------------------------------------------------------
     // ADVANCE BLEND

@@ -23,10 +23,8 @@ void mode_audioHueDrift() {
         lastHue = now;
     }
 
-    double bass, mid, treb;
-    computeAudioBands(bass, mid, treb);
-
-    float energy = (bass + mid + treb) / (BASS_MAX + MID_MAX + TREB_MAX);
+    float energy = (audioBassRaw() + audioMidRaw() + audioTrebRaw())
+                 / (BASS_MAX + MID_MAX + TREB_MAX);
 
     uint32_t c = colourFromHue(driftHue);
     fillAll(dimColour(c, energy));

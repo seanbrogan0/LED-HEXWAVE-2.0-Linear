@@ -32,18 +32,22 @@ static uint32_t hueToRGB(int hueDeg) {
 
 // =========================================================
 // SOLID COLOUR MODE
+// Left pot sweeps hue 0–340°, then desaturates to white at
+// the top of its travel (same curve as the raw-pot original,
+// where the white zone began at 3500/4095).
 // =========================================================
 void mode_solid() {
-    int value = leftPotValue;
+    const float WHITE_POINT = 3500.0f / 4095.0f;
+    float p = modeEngine.leftPot();
     uint32_t color;
 
-    if (value < 3500) {
+    if (p < WHITE_POINT) {
         // Hue sweep 0 → 340 degrees
-        int hue = map(value, 0, 3500, 0, 340);
+        int hue = (int)(p / WHITE_POINT * 340.0f);
         color = hueToRGB(hue);
     } else {
         // Fade saturation → white
-        int sat = map(value, 3500, 4095, 255, 0);
+        int sat = (int)(255.0f - (p - WHITE_POINT) / (1.0f - WHITE_POINT) * 255.0f);
 
         uint8_t r = 255;
         uint8_t g = 0;

@@ -14,35 +14,52 @@
 #include "modes/non_audio/mode_hexFadeRandom.h"
 #include "modes/non_audio/mode_dualCometsHexPath.h"
 
-// Function pointer type for modes
-typedef void (*ModeFunc)();
-
-// Audio mode table
-static ModeFunc audioModes[] = {
-    mode_simpleAudioHex,
-    mode_impactSparks,
-    mode_audioHueDrift,
-    mode_volumeSpread
+// =========================================================
+// MODE TABLES
+// All modes on this fixture repaint or rely on persistence,
+// so none use autoClear.
+// =========================================================
+static const ModeEntry audioModes[] = {
+    { mode_simpleAudioHex,       false, "Simple Audio Hex" },
+    { mode_impactSparks,         false, "Impact Sparks" },
+    { mode_audioHueDrift,        false, "Audio Hue Drift" },
+    { mode_volumeSpread,         false, "Volume Spread" },
 };
 
-// Non-audio mode table
-static ModeFunc nonAudioModes[] = {
-    mode_solid,
-    mode_perimeterPathBounce,
-    mode_hexFadeRandom,
-    mode_dualCometsHexPath
+static const ModeEntry nonAudioModes[] = {
+    { mode_solid,                false, "Solid" },
+    { mode_perimeterPathBounce,  false, "Perimeter Path Bounce" },
+    { mode_hexFadeRandom,        false, "Hex Fade Random" },
+    { mode_dualCometsHexPath,    false, "Dual Comets Hex Path" },
 };
+
+// =========================================================
+// REGISTRY API
+// =========================================================
+int audioModeCount() {
+    return sizeof(audioModes) / sizeof(audioModes[0]);
+}
+
+int nonAudioModeCount() {
+    return sizeof(nonAudioModes) / sizeof(nonAudioModes[0]);
+}
 
 void runAudioMode(int index) {
-    if (index < 0) return;
-    int count = sizeof(audioModes) / sizeof(audioModes[0]);
-    if (index >= count) return;
-    audioModes[index]();
+    if (index < 0 || index >= audioModeCount()) return;
+    audioModes[index].run();
 }
 
 void runNonAudioMode(int index) {
-    if (index < 0) return;
-    int count = sizeof(nonAudioModes) / sizeof(nonAudioModes[0]);
-    if (index >= count) return;
-    nonAudioModes[index]();
+    if (index < 0 || index >= nonAudioModeCount()) return;
+    nonAudioModes[index].run();
+}
+
+bool audioModeAutoClear(int index) {
+    if (index < 0 || index >= audioModeCount()) return false;
+    return audioModes[index].autoClear;
+}
+
+bool nonAudioModeAutoClear(int index) {
+    if (index < 0 || index >= nonAudioModeCount()) return false;
+    return nonAudioModes[index].autoClear;
 }

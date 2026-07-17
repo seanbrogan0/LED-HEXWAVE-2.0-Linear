@@ -86,9 +86,9 @@ void mode_dualCometsHexPath() {
     }
 
     // ---------------------------------------------------------
-    // LEFT POT = SPEED (matches original curve)
+    // LEFT POT = SPEED (same 40 → 5 ms curve as the raw-pot map)
     // ---------------------------------------------------------
-    int speed = map(leftPotValue, 0, 4095, 40, 5);
+    int speed = (int)(40.0f - modeEngine.leftPot() * 35.0f);
 
     static unsigned long lastMove = 0;
     unsigned long now = millis();
