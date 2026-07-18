@@ -1,76 +1,77 @@
 // /src/main.cpp
+// =========================================================
+// LED HexWave 2.0 — main program
+//
+// Left button  : short = cycle mode, long = reset both groups
+// Right button : toggle audio mode
+// Left pot     : mode parameter (colour / speed / etc.)
+// Right pot    : global brightness (2% floor)
+//
+// All per-fixture configuration lives in board_config.h and
+// hex_geometry; all modes live in src/modes/** and register
+// themselves in mode_registry.cpp.
+// =========================================================
 
 #include <Arduino.h>
-#include <EEPROM.h>
+#include "board_config.h"
 #include "hardware.h"
 #include "input.h"
+#include "audio_engine.h"
 #include "mode_registry.h"
-#include "utils.h"
-#include "audio_engine.h"   // <-- REQUIRED for updateFFT()
+
+// The on-hardware test harness supplies its own setup()/loop()
+#ifndef PIO_UNIT_TESTING
 
 // =========================================================
 // SETUP
 // =========================================================
 void setup() {
     Serial.begin(115200);
+    initHardware();
+    modeEngine.begin();
+}
 
-    // Button + indicator LED pins
-    pinMode(PIN_LEFTBTN, INPUT_PULLUP);
-    pinMode(PIN_RIGHTBTN, INPUT_PULLUP);
-    pinMode(PIN_LED_IND, OUTPUT);
+// =========================================================
+// LOOP
+// =========================================================
+void loop() {
+#if FRAME_INTERVAL_MS > 0
+    static unsigned long lastFrame = 0;
+    if (millis() - lastFrame < FRAME_INTERVAL_MS) return;
+    lastFrame = millis();
+#endif
 
-    // EEPROM for mode persistence
-    EEPROM.begin(10);
-    loadModeState();
+    modeEngine.update();
 
-    // Indicator LED reflects persisted audio mode state
-    digitalWrite(PIN_LED_IND, audioModeEnabled ? HIGH : LOW);
+    // Global brightness: right pot with a floor, capped per board
+    float brightness = modeEngine.rightPot();
+    if (brightness < BRIGHTNESS_FLOOR) brightness = BRIGHTNESS_FLOOR;
+    strip.setBrightness((uint8_t)(brightness * MAX_BRIGHTNESS + 0.5f));
 
-    // NeoPixel strip init
-    strip.begin();
+    if (modeEngine.audioModeEnabled()) {
+        audioUpdate(PIN_MIC);
+        int mode = modeEngine.currentAudioMode();
+        if (audioModeAutoClear(mode)) strip.clear();
+        runAudioMode(mode);
+    } else {
+        int mode = modeEngine.currentNonAudioMode();
+        if (nonAudioModeAutoClear(mode)) strip.clear();
+        runNonAudioMode(mode);
+    }
+
+#ifdef DEBUG_MODES
+    static unsigned long lastPrint = 0;
+    if (millis() - lastPrint > 1000) {
+        lastPrint = millis();
+        if (modeEngine.audioModeEnabled()) {
+            Serial.printf("Audio Mode: %d\n", modeEngine.currentAudioMode());
+        } else {
+            Serial.printf("Non-Audio Mode: %d\n", modeEngine.currentNonAudioMode());
+        }
+    }
+#endif
+
     strip.show();
 }
 
-// =========================================================
-// MAIN LOOP
-// =========================================================
-void loop() {
-    // Read pots + buttons every frame
-    ReadPots();
-    ReadButtons();
-
-    // Restore original brightness behaviour:
-    // globalMaxBright is set BEFORE SendColours() and applied via strip.setBrightness()
-    globalMaxBright = map(rightPotValue, 0, 4095, 0, 160);
-
-    // AUDIO MODE
-    if (audioModeEnabled) {
-
-        // -------------------------------------------------
-        // NEW: Update FFT BEFORE running the audio mode
-        // -------------------------------------------------
-        updateFFT();
-
-        runAudioMode(currentAudioMode);
-    }
-
-    // NON-AUDIO MODE
-    else {
-        runNonAudioMode(currentNonAudioMode);
-    }
-// Debug: print current mode once per second
-static unsigned long lastPrint = 0;
-if (millis() - lastPrint > 1000) {
-    lastPrint = millis();
-    if (audioModeEnabled) {
-        Serial.printf("Audio Mode: %d\n", currentAudioMode);
-    } else {
-        Serial.printf("Non-Audio Mode: %d\n", currentNonAudioMode);
-    }
-}
-    // Push current frame to LEDs (uses globalMaxBright)
-    SendColours();
-
-    // Restore original Arduino loop pacing (~100 FPS, matches original sketch feel)
-    delay(10);
-}
+#endif  // PIO_UNIT_TESTING

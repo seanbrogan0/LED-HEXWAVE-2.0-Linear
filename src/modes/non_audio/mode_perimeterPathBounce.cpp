@@ -3,19 +3,14 @@
 #include "modes/non_audio/mode_perimeterPathBounce.h"
 #include "input.h"
 #include "utils.h"
-#include "hex_mapping.h"
+#include "hex_geometry.h"
 #include "palette.h"
 #include "hardware.h"
 #include <Arduino.h>
 
 // =========================================================
-// PERIMETER PATH (ORIGINAL ORDER 1→9)
-// =========================================================
-static int HEX_PATH_PERIM[] = {1, 2, 3, 4, 5, 6, 7, 8, 9};
-static const int PATH_LEN_PERIM = 9;
-
-// =========================================================
 // PERIMETER PATH BOUNCE MODE
+// Path data (HEX_PATH_PERIM, 1 → 9) lives in hex_geometry.
 // =========================================================
 void mode_perimeterPathBounce() {
     static int hexIndex = 0;
@@ -44,9 +39,9 @@ void mode_perimeterPathBounce() {
     }
 
     // ---------------------------------------------------------
-    // LEFT POT = SPEED CONTROL
+    // LEFT POT = SPEED (same 400 → 50 ms curve as the raw-pot map)
     // ---------------------------------------------------------
-    int speed = map(leftPotValue, 0, 4095, 400, 50);
+    int speed = (int)(400.0f - modeEngine.leftPot() * 350.0f);
     static unsigned long lastMove = 0;
 
     if (millis() - lastMove >= (unsigned long)speed) {
@@ -64,7 +59,7 @@ void mode_perimeterPathBounce() {
         // -----------------------------------------------------
         // END OF HEX → MOVE TO NEXT / BOUNCE
         // -----------------------------------------------------
-        if (edgeIndex >= HEX_SIZE) {
+        if (edgeIndex >= HEX_LED_COUNT) {
             edgeIndex = 0;
             hexIndex += direction;
 

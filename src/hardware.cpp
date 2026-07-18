@@ -3,19 +3,15 @@
 #include "hardware.h"
 
 // =========================================================
-// STRIP INITIALISATION
+// STRIP DEFINITION
 // =========================================================
 Adafruit_NeoPixel strip(NUM_LEDS, PIN_LEDS, NEO_GRB + NEO_KHZ800);
 
-// Global brightness cap
-int globalMaxBright = 160;
-
 // =========================================================
-// HARDWARE INITIALISATION (OPTIONAL EXPANSION POINT)
+// HARDWARE INITIALISATION
 // =========================================================
 void initHardware() {
-    // If you ever want to expand hardware init logic,
-    // this function is here for that purpose.
     strip.begin();
     strip.show();
+    analogReadResolution(12);   // pots + mic use the full 0–4095 range
 }

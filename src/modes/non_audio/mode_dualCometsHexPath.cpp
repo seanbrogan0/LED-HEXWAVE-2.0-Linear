@@ -4,7 +4,8 @@
 #include "input.h"
 #include "utils.h"
 #include "palette.h"
-#include "hex_mapping.h"
+#include "hex_geometry.h"
+#include "path_math.h"
 #include "hardware.h"
 #include <Arduino.h>
 
@@ -18,20 +19,17 @@
 // Left pot = speed. Right pot = brightness.
 // =========================================================
 
-// Original custom path (not perimeter)
-static int HEX_PATH_COMETS[] = {1,2,3,2,4,5,6,7,8,9};
-static const int PATH_LEN_COMETS = 10;
+static const int TOTAL_PATH = PATH_LEN_COMETS * HEX_LED_COUNT;
 
-// Convert path position → LED index
+// Convert path position → LED index (path data lives in hex_geometry)
 static int getPathLED(int pathPos) {
-    int hexIndex = HEX_PATH_COMETS[pathPos / HEX_SIZE] - 1;
-    int ledIndex = pathPos % HEX_SIZE;
-    return HEXES[hexIndex][ledIndex];
+    return pathPosToLED(pathPos, HEX_PATH_COMETS, PATH_LEN_COMETS,
+                        HEXES, HEX_LED_COUNT);
 }
 
 // Comet positions + colours
 static int pos1 = 0;
-static int pos2 = (PATH_LEN_COMETS * HEX_SIZE) / 2;
+static int pos2 = TOTAL_PATH / 2;
 
 static uint32_t col1 = 0;
 static uint32_t col2 = 0;
@@ -45,19 +43,10 @@ static bool firstRun = true;
 // =========================================================
 static void drawCometGlow(int headPos, uint32_t colour) {
 
-    int totalPath = PATH_LEN_COMETS * HEX_SIZE;
-
-    // Wrap helper
-    auto wrap = [&](int p) {
-        if (p < 0) return p + totalPath;
-        if (p >= totalPath) return p - totalPath;
-        return p;
-    };
-
     // -----------------------------------------------------
     // HEADER GLOW (in front of head)
     // -----------------------------------------------------
-    int headerPos = wrap(headPos + 1);
+    int headerPos = wrapPathPos(headPos + 1, TOTAL_PATH);
     strip.setPixelColor(getPathLED(headerPos), dimColour(colour, 0.15f));  // 15%
 
     // -----------------------------------------------------
@@ -74,7 +63,7 @@ static void drawCometGlow(int headPos, uint32_t colour) {
 
     for (int t = 1; t <= 10; t++) {   // draw only first 10
         float level = expf(-k * t);
-        int tailPos = wrap(headPos - t);
+        int tailPos = wrapPathPos(headPos - t, TOTAL_PATH);
         strip.setPixelColor(getPathLED(tailPos), dimColour(colour, level));
     }
 
@@ -97,9 +86,9 @@ void mode_dualCometsHexPath() {
     }
 
     // ---------------------------------------------------------
-    // LEFT POT = SPEED (matches original curve)
+    // LEFT POT = SPEED (same 40 → 5 ms curve as the raw-pot map)
     // ---------------------------------------------------------
-    int speed = map(leftPotValue, 0, 4095, 40, 5);
+    int speed = (int)(40.0f - modeEngine.leftPot() * 35.0f);
 
     static unsigned long lastMove = 0;
     unsigned long now = millis();
@@ -107,23 +96,11 @@ void mode_dualCometsHexPath() {
     if (now - lastMove >= (unsigned long)speed) {
         lastMove = now;
 
-        int totalPath = PATH_LEN_COMETS * HEX_SIZE;
-
         // -----------------------------------------------------
         // GLOBAL FADE (original 0.97 tail fade)
         // -----------------------------------------------------
         for (int i = 0; i < NUM_LEDS; i++) {
-            uint32_t c = strip.getPixelColor(i);
-
-            uint8_t r = (c >> 16) & 0xFF;
-            uint8_t g = (c >> 8)  & 0xFF;
-            uint8_t b =  c        & 0xFF;
-
-            r = (uint8_t)(r * 0.97f);
-            g = (uint8_t)(g * 0.97f);
-            b = (uint8_t)(b * 0.97f);
-
-            strip.setPixelColor(i, r, g, b);
+            strip.setPixelColor(i, dimColour(strip.getPixelColor(i), 0.97f));
         }
 
         // -----------------------------------------------------
@@ -131,7 +108,7 @@ void mode_dualCometsHexPath() {
         // -----------------------------------------------------
         drawCometGlow(pos1, col1);
         pos1++;
-        if (pos1 >= totalPath) {
+        if (pos1 >= TOTAL_PATH) {
             pos1 = 0;
             col1 = randomPaletteColour();   // new colour on wrap
         }
@@ -141,7 +118,7 @@ void mode_dualCometsHexPath() {
         // -----------------------------------------------------
         drawCometGlow(pos2, col2);
         pos2++;
-        if (pos2 >= totalPath) {
+        if (pos2 >= TOTAL_PATH) {
             pos2 = 0;
             col2 = randomPaletteColour();   // new colour on wrap
         }
