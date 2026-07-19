@@ -31,6 +31,18 @@ void test_dimColour32_factors() {
                             dimColour32(packColour(255, 100, 0), 0.4f));
 }
 
+void test_maxColour32_per_channel() {
+    // Takes the max of each channel independently
+    TEST_ASSERT_EQUAL_HEX32(packColour(200, 100, 50),
+        maxColour32(packColour(200, 20, 50), packColour(10, 100, 30)));
+    // A colour maxed with black is unchanged
+    TEST_ASSERT_EQUAL_HEX32(packColour(9, 0, 255),
+        maxColour32(packColour(9, 0, 255), 0));
+    // Fading toward a background floors at the background
+    uint32_t background = packColour(9, 0, 12);
+    TEST_ASSERT_EQUAL_HEX32(background, maxColour32(packColour(1, 0, 3), background));
+}
+
 void test_lerpColour32_endpoints_and_clamping() {
     uint32_t a = packColour(10, 20, 30);
     uint32_t b = packColour(200, 100, 50);
@@ -140,21 +152,57 @@ void test_path_entries_reference_real_hexes() {
 // path_math
 // =========================================================
 void test_pathPosToLED_hex_boundaries() {
-    // Position 0 is the first LED of the path's first hex (HEX1)
-    TEST_ASSERT_EQUAL(HEX1[0],
+    // Position 0 is the first LED of the path's first hex (HEX3, the spur tip)
+    TEST_ASSERT_EQUAL(HEX3[0],
         pathPosToLED(0, HEX_PATH_COMETS, PATH_LEN_COMETS, HEXES, HEX_LED_COUNT));
-    // Position 23 is the last LED of HEX1
-    TEST_ASSERT_EQUAL(HEX1[HEX_LED_COUNT - 1],
+    // Position 23 is the last LED of HEX3
+    TEST_ASSERT_EQUAL(HEX3[HEX_LED_COUNT - 1],
         pathPosToLED(HEX_LED_COUNT - 1, HEX_PATH_COMETS, PATH_LEN_COMETS, HEXES, HEX_LED_COUNT));
     // Position 24 crosses into the path's second hex (HEX2)
     TEST_ASSERT_EQUAL(HEX2[0],
         pathPosToLED(HEX_LED_COUNT, HEX_PATH_COMETS, PATH_LEN_COMETS, HEXES, HEX_LED_COUNT));
+    // Position 48 crosses into the path's third hex (HEX1)
+    TEST_ASSERT_EQUAL(HEX1[0],
+        pathPosToLED(2 * HEX_LED_COUNT, HEX_PATH_COMETS, PATH_LEN_COMETS, HEXES, HEX_LED_COUNT));
 }
 
-void test_pathPosToLED_revisited_hex() {
-    // The comets path {1,2,3,2,...} deliberately revisits HEX2 at slot 3
-    TEST_ASSERT_EQUAL(HEX2[0],
-        pathPosToLED(3 * HEX_LED_COUNT, HEX_PATH_COMETS, PATH_LEN_COMETS, HEXES, HEX_LED_COUNT));
+void test_paths_visit_every_hex_exactly_once() {
+    // The chain walk {3,2,1,4,...,9} is a permutation of 1..NUM_HEXES
+    const int* paths[] = { HEX_PATH_COMETS, HEX_PATH_PERIM };
+    const int  lens[]  = { PATH_LEN_COMETS, PATH_LEN_PERIM };
+
+    for (int p = 0; p < 2; p++) {
+        TEST_ASSERT_EQUAL(NUM_HEXES, lens[p]);
+        bool seen[NUM_HEXES] = { false };
+        for (int i = 0; i < lens[p]; i++) {
+            int hex = paths[p][i];
+            TEST_ASSERT_FALSE_MESSAGE(seen[hex - 1], "hex visited twice");
+            seen[hex - 1] = true;
+        }
+        for (int h = 0; h < NUM_HEXES; h++) {
+            TEST_ASSERT_TRUE_MESSAGE(seen[h], "hex missing from path");
+        }
+    }
+}
+
+void test_spread_rings_cover_every_hex_once() {
+    // Ring 0 duplicates the centre; every hex 1..9 appears exactly once
+    bool seen[NUM_HEXES] = { false };
+
+    TEST_ASSERT_EQUAL(SPREAD_RINGS[0][0], SPREAD_RINGS[0][1]);
+    seen[SPREAD_RINGS[0][0] - 1] = true;
+
+    for (int k = 1; k < NUM_RINGS; k++) {
+        for (int j = 0; j < 2; j++) {
+            int hex = SPREAD_RINGS[k][j];
+            TEST_ASSERT_TRUE_MESSAGE(hex >= 1 && hex <= NUM_HEXES, "ring hex out of range");
+            TEST_ASSERT_FALSE_MESSAGE(seen[hex - 1], "hex in two rings");
+            seen[hex - 1] = true;
+        }
+    }
+    for (int h = 0; h < NUM_HEXES; h++) {
+        TEST_ASSERT_TRUE_MESSAGE(seen[h], "hex missing from rings");
+    }
 }
 
 void test_wrapPathPos_seam() {
@@ -174,6 +222,7 @@ int main(int, char**) {
 
     RUN_TEST(test_packColour_bit_layout);
     RUN_TEST(test_dimColour32_factors);
+    RUN_TEST(test_maxColour32_per_channel);
     RUN_TEST(test_lerpColour32_endpoints_and_clamping);
     RUN_TEST(test_clamp_helpers);
     RUN_TEST(test_wrapIndex);
@@ -188,7 +237,8 @@ int main(int, char**) {
     RUN_TEST(test_path_entries_reference_real_hexes);
 
     RUN_TEST(test_pathPosToLED_hex_boundaries);
-    RUN_TEST(test_pathPosToLED_revisited_hex);
+    RUN_TEST(test_paths_visit_every_hex_exactly_once);
+    RUN_TEST(test_spread_rings_cover_every_hex_once);
     RUN_TEST(test_wrapPathPos_seam);
 
     return UNITY_END();

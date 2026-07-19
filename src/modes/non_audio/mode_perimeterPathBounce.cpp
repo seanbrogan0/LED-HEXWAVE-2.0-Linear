@@ -10,7 +10,9 @@
 
 // =========================================================
 // PERIMETER PATH BOUNCE MODE
-// Path data (HEX_PATH_PERIM, 1 → 9) lives in hex_geometry.
+// Path data (HEX_PATH_PERIM, the physical chain walk
+// 3 → 2 → 1 → 4 → … → 9) lives in hex_geometry; the bounce
+// reverses at the chain's two true endpoints (spur tip, hex 9).
 // =========================================================
 void mode_perimeterPathBounce() {
     static int hexIndex = 0;

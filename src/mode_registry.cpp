@@ -7,23 +7,32 @@
 #include "modes/audio/mode_impactSparks.h"
 #include "modes/audio/mode_audioHueDrift.h"
 #include "modes/audio/mode_volumeSpread.h"
+#include "modes/audio/mode_beatWave.h"
+#include "modes/audio/mode_bassTreble.h"
 
 // Non-audio modes
 #include "modes/non_audio/mode_solid.h"
 #include "modes/non_audio/mode_perimeterPathBounce.h"
 #include "modes/non_audio/mode_hexFadeRandom.h"
 #include "modes/non_audio/mode_dualCometsHexPath.h"
+#include "modes/non_audio/mode_chase.h"
+#include "modes/non_audio/mode_sparkle.h"
+#include "modes/non_audio/mode_breathe.h"
+#include "modes/non_audio/mode_rainbowFlow.h"
 
 // =========================================================
 // MODE TABLES
 // All modes on this fixture repaint or rely on persistence,
-// so none use autoClear.
+// so none use autoClear. New entries are appended so saved
+// EEPROM mode indices keep pointing at the same modes.
 // =========================================================
 static const ModeEntry audioModes[] = {
     { mode_simpleAudioHex,       false, "Simple Audio Hex" },
     { mode_impactSparks,         false, "Impact Sparks" },
     { mode_audioHueDrift,        false, "Audio Hue Drift" },
     { mode_volumeSpread,         false, "Volume Spread" },
+    { mode_beatWave,             false, "Beat Wave" },
+    { mode_bassTreble,           false, "Bass vs Treble" },
 };
 
 static const ModeEntry nonAudioModes[] = {
@@ -31,6 +40,10 @@ static const ModeEntry nonAudioModes[] = {
     { mode_perimeterPathBounce,  false, "Perimeter Path Bounce" },
     { mode_hexFadeRandom,        false, "Hex Fade Random" },
     { mode_dualCometsHexPath,    false, "Dual Comets Hex Path" },
+    { mode_chase,                false, "Chase" },
+    { mode_sparkle,              false, "Sparkle" },
+    { mode_breathe,              false, "Breathe" },
+    { mode_rainbowFlow,          false, "Rainbow Flow" },
 };
 
 // =========================================================

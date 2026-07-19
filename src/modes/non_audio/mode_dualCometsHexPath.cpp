@@ -11,7 +11,8 @@
 
 // =========================================================
 // MODE 3 — DUAL COMETS WITH EXTREME 80‑LED EXPONENTIAL GLOW
-// Two comets follow a custom hex path with:
+// Two comets loop the one-way chain walk (HEX_PATH_COMETS,
+// 3 → 2 → 1 → 4 → … → 9, wrapping 9 → 3) with:
 // - 15% header glow
 // - 80‑LED exponential tail (k = 0.04)
 // - Only first 10 LEDs freshly drawn (prevents colour pop)

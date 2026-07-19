@@ -18,5 +18,9 @@ const uint16_t* const HEXES[NUM_HEXES] = {
     HEX1, HEX2, HEX3, HEX4, HEX5, HEX6, HEX7, HEX8, HEX9
 };
 
-const int HEX_PATH_COMETS[] = {1, 2, 3, 2, 4, 5, 6, 7, 8, 9};
-const int HEX_PATH_PERIM[]  = {1, 2, 3, 4, 5, 6, 7, 8, 9};
+const int HEX_PATH_COMETS[] = {3, 2, 1, 4, 5, 6, 7, 8, 9};
+const int HEX_PATH_PERIM[]  = {3, 2, 1, 4, 5, 6, 7, 8, 9};
+
+const int SPREAD_RINGS[NUM_RINGS][2] = {
+    {5, 5}, {4, 6}, {1, 7}, {2, 8}, {3, 9}
+};
